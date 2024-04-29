@@ -5,13 +5,15 @@ def clean_part_col(df: pd.DataFrame, part_col: int) -> pd.DataFrame:
     df.iloc[:, part_col] = (
         df.iloc[:, part_col]
         .astype(str)
+        .str.upper()
         .str.strip()
         .str.replace(" ", "")
         .str.replace("BW", "")
         .str.replace("-", "")
         .str.replace('"', "")
         .str.replace("=", "")
-        .str.upper()
+        .str.replace("BUS", "")
+        .str.replace("IMC", "")
     )
 
     return df

@@ -75,6 +75,11 @@ def convert_raw_to_tracing(
         else:
             calculated_unit_rebate = row[rebate] / row[quantity]
 
+        if col_map["uom"]:
+            uom_val = row[uom]
+        else:
+            uom_val = "CA"
+
         tracing = {
             "period": period,
             "name": row[name],
@@ -93,7 +98,7 @@ def convert_raw_to_tracing(
             "part": row[part],
             "unit_rebate": calculated_unit_rebate,
             "ship_qty": row[quantity],
-            "uom": row[uom],
+            "uom": uom_val,
             "ship_qty_as_cs": convert_to_cs(row[part], row[uom], row[quantity]),
             "rebate": row[rebate],
             "cost": total_sale,

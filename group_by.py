@@ -49,7 +49,7 @@ def find_tracings(
 
     filter = {"$match": {"period": {"$regex": period, "$options": "i"}}}
 
-    docs = Tracings.find(filter)
+    docs = Tracings.aggregate([filter])
 
     if docs:
         return pd.DataFrame(list(docs))
