@@ -1,3 +1,4 @@
+import os
 from datetime import date, datetime
 from functools import lru_cache
 from math import floor
@@ -215,7 +216,9 @@ def group_tracings(df: pd.DataFrame):
 
         df_with_summary = pd.concat([df_with_summary, df_temp], axis=0)
 
-        df_with_summary.to_excel(f"{period}.xlsx", index=False)
+        df_with_summary.to_excel(
+            os.path.join("completed", f"{period}.xlsx"), index=False
+        )
 
         print(f"Saved {period}.xlsx")
 
