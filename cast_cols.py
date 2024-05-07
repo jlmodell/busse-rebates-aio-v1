@@ -3,7 +3,13 @@ import pandas as pd
 
 def cast_float(df: pd.DataFrame, float_cols: list[int]) -> pd.DataFrame:
     for col in float_cols:
-        df.iloc[:, col] = df.iloc[:, col].astype(float)
+        df.iloc[:, col] = (
+            df.iloc[:, col]
+            .str.replace('"', "")
+            .str.replace("=", "")
+            .str.replace("$", "")
+            .astype(float)
+        )
 
     return df
 

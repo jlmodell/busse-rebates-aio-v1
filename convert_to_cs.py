@@ -1,6 +1,5 @@
 import re
 
-
 from db import find_part_details_by_part
 
 EACH = ["EA", "PR", "TR", "PK", "EACH", "Ea", "Pr", "Tr", "Pk", "Each", "KIT", "Kit"]
@@ -21,25 +20,32 @@ def convert_to_cs(part: str, uom: str, quantity: float) -> float:
     if doc:
         ea_per_case = doc["each_per_case"]
         bx_per_case = doc["num_of_dispenser_boxes_per_case"]
+        if bx_per_case == 0:
+            bx_per_case = 1
 
-        if part == "164" and re.match(r"^pk", uom, re.IGNORECASE):
-            return quantity / bx_per_case
+        try:
+            if part == "164" and re.match(r"^pk", uom, re.IGNORECASE):
+                return quantity / bx_per_case
 
-        if part == "770" and re.match(r"^pk", uom, re.IGNORECASE):
-            quantity *= 12
-            return quantity / 48
+            if part == "770" and re.match(r"^pk", uom, re.IGNORECASE):
+                quantity *= 12
+                return quantity / 48
 
-        if part == "3220" and uom in CASE:
-            return quantity / bx_per_case
+            if part == "3220" and uom in CASE:
+                return quantity / bx_per_case
 
-        if part == "795" and re.match(r"^pk", uom, re.IGNORECASE):
-            return quantity / ea_per_case
+            if part == "795" and re.match(r"^pk", uom, re.IGNORECASE):
+                return quantity / ea_per_case
 
-        if uom in EACH:
-            return quantity / ea_per_case
-        elif uom in BOX:
-            return quantity / bx_per_case
-        elif uom in CASE:
-            return quantity
-        else:
+            if uom in EACH:
+                return quantity / ea_per_case
+            elif uom in BOX:
+                return quantity / bx_per_case
+            elif uom in CASE:
+                return quantity
+            else:
+                return 0.0
+        except ZeroDivisionError:
+            print(part, uom, quantity, ea_per_case, bx_per_case)
+
             return 0.0

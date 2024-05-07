@@ -176,7 +176,7 @@ current_file_maps = {
             "invoice_nbr": 8,
             "invoice_date": 9,
             "quantity": 10,
-            "uom": None,
+            "uom": 14,
             "sale": 12,
             "unit_rebate": None,
             "rebate": 13,
@@ -303,11 +303,11 @@ def ingest(
 
     df.columns = [str(col) for col in df.columns]
 
-    df = cast_float(df, float_cols)
-    df = cast_date(df, date_col)
     df = clean_part_col(df, col_map["part"])
     df = clean_contract_col(df, col_map["contract"])
     df = clean_uom_col(df, col_map["uom"])
+    df = cast_float(df, float_cols)
+    df = cast_date(df, date_col)
 
     df.fillna("", inplace=True)
 
