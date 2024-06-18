@@ -1,5 +1,5 @@
 import os
-
+import re
 import pandas as pd
 
 concordance_and_mms = {
@@ -346,10 +346,15 @@ def read(file_path: str) -> pd.DataFrame:
     base_name = os.path.basename(file_path)
     extension = os.path.splitext(base_name)[1]
 
-    if extension == ".csv":
+    match_csv = re.compile(r".csv$", re.IGNORECASE)
+    match_xls = re.compile(r".xls$", re.IGNORECASE)
+    match_xlsx = re.compile(r".xlsx$", re.IGNORECASE)
+
+    if match_csv.match(extension):
         return pd.read_csv(file_path, dtype=str)
-    elif extension == ".xlsx":
+    elif match_xls.match(extension) or match_xlsx.match(extension):
         return pd.read_excel(file_path, dtype=str)
+
 
 
 def ingest(
