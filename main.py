@@ -7,13 +7,16 @@ from maps import current_file_maps, ingest, transform
 
 
 def main(
-    distributor: str,
+    d: str,
     month: str | int,
     year: str | int,
-    file_path: str | None = None,
+    fp: str | None = None,
     day: str | int = 1,
     utility: str = None,
 ):
+    distributor = d
+    file_path = fp
+
     distributor = distributor.lower()
 
     if distributor not in current_file_maps:
