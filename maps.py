@@ -404,7 +404,7 @@ def ingest(
             axis=1,
         )
 
-        df.to_csv("dealmed.test.csv", index=False)
+        # df.to_csv("dealmed.test.csv", index=False)
 
     if dw:
         from write_to_data_warehouse import write_to_data_warehouse
@@ -421,7 +421,7 @@ def ingest(
         day=day,
     )
 
-    tracings_df.to_csv("tracings.test.csv", index=False)
+    # tracings_df.to_csv("tracings.test.csv", index=False)
 
     return tracings_df
 
