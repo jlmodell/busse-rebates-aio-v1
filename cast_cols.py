@@ -2,12 +2,13 @@ import pandas as pd
 
 
 def cast_float(df: pd.DataFrame, float_cols: list[int]) -> pd.DataFrame:
+    # print(df.iloc[:, float_cols].head())
     for col in float_cols:
         df.iloc[:, col] = (
             df.iloc[:, col]
-            .str.replace('"', "")
-            .str.replace("=", "")
-            .str.replace("$", "")
+            .str.replace('"', "", regex=False)
+            .str.replace("=", "", regex=False)
+            .str.replace("$", "", regex=False)
             .astype(float)
         )
 

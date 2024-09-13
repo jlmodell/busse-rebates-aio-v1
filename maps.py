@@ -1,5 +1,6 @@
 import os
 import re
+
 import pandas as pd
 
 concordance_and_mms = {
@@ -163,7 +164,7 @@ current_file_maps = {
             "rebate": 26,
         },
     },
-    "atlantic_medical": {
+    "atl_med": {
         "float_cols": [7, 8, 9, 10],
         "date_col": 5,
         "requires_cost_calc": True,
@@ -296,25 +297,25 @@ current_file_maps = {
         },
     },
     "tri_anim": {
-        "float_cols": [23, 24, 25, 26, 27],
-        "date_col": 16,
+        "float_cols": [22, 23, 24, 25, 26],
+        "date_col": 15,
         "requires_cost_calc": False,
         "col_map": {
             "contract": 2,
-            "part": 20,
-            "name": 2,
+            "part": 19,
+            "name": 4,
             "address": 6,
             "address_2": 7,
             "city": 8,
             "state": 9,
             "postal": 10,
-            "invoice_nbr": 13,
-            "invoice_date": 16,
-            "quantity": 23,
-            "uom": 21,
+            "invoice_nbr": 12,
+            "invoice_date": 15,
+            "quantity": 22,
+            "uom": 20,
             "sale": 24,
-            "unit_rebate": 25,
-            "rebate": 26,
+            "unit_rebate": 23,
+            "rebate": 25,
         },
     },
     "twin_med": {
@@ -356,7 +357,6 @@ def read(file_path: str) -> pd.DataFrame:
         return pd.read_excel(file_path, dtype=str)
 
 
-
 def ingest(
     distributor: str,
     month: str,
@@ -385,6 +385,27 @@ def ingest(
 
     df.fillna("", inplace=True)
 
+    if distributor == "dealmed":
+        # iterate over each row and if ['Extended Contract Price'] is 0 or NaN, set ['Extended Contract Price'] = ['Extended Purchase Price']
+        df["Extended Contract Price"] = df.apply(
+            lambda row: row["Extended Purchase Price"]
+            if row["Extended Contract Price"] == "0"
+            or row["Extended Contract Price"] == ""
+            or pd.isna(row["Extended Contract Price"])
+            else row["Extended Contract Price"],
+            axis=1,
+        )
+        # iterate over each row and if ['Extended Rebate Requested'] is "" or NaN then set to float $0.00
+        df["Extended Rebate Requested"] = df.apply(
+            lambda row: 0.00
+            if row["Extended Rebate Requested"] == ""
+            or pd.isna(row["Extended Rebate Requested"])
+            else row["Extended Rebate Requested"],
+            axis=1,
+        )
+
+        df.to_csv("dealmed.test.csv", index=False)
+
     if dw:
         from write_to_data_warehouse import write_to_data_warehouse
 
@@ -399,6 +420,8 @@ def ingest(
         col_map=col_map,
         day=day,
     )
+
+    tracings_df.to_csv("tracings.test.csv", index=False)
 
     return tracings_df
 
