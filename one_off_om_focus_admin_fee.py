@@ -51,6 +51,8 @@ def etl(fp):
     ]
     data = [x for x in data if x.startswith("                 ") and x[25] != " "]
 
+    # print(adj)
+
     # Load
     print("Loading...")
     total_start = 91
@@ -60,8 +62,9 @@ def etl(fp):
     total_fee_after_adj_start = total_fee_start
 
     adjustments: Dict[str, ETL_ADJ] = {
-        "3.2": None,
         "3.5": None,
+        "3.2": None,
+        "0.5": None,
     }
 
     temp = [{}, {}]
@@ -125,6 +128,32 @@ def etl(fp):
             adjustments[str(temp[count]["fee_percentage"])] = ETL_ADJ(**temp[count])
 
             count += 1
+
+    # print(adjustments)
+    if adjustments["3.5"] is None:
+        adjustments["3.5"] = ETL_ADJ(
+            total_cost=0,
+            total_fee=0,
+            fee_percentage=3.5,
+            adj=0,
+            total_fee_after_adj=0,
+        )
+    if adjustments["3.2"] is None:
+        adjustments["3.2"] = ETL_ADJ(
+            total_cost=0,
+            total_fee=0,
+            fee_percentage=3.2,
+            adj=0,
+            total_fee_after_adj=0,
+        )
+    if adjustments["0.5"] is None:
+        adjustments["0.5"] = ETL_ADJ(
+            total_cost=0,
+            total_fee=0,
+            fee_percentage=0.5,
+            adj=0,
+            total_fee_after_adj=0,
+        )
 
     item_start = 29
     item_end = 35
@@ -205,6 +234,8 @@ def etl(fp):
         else:
             error_rows.append(temp)
 
+    # print(rows)
+
     # Return
     print("Done!")
 
@@ -221,14 +252,14 @@ def etl(fp):
 
     print(adjustments)
     # get dir of filename
-    file_dir = os.path.dirname(fp)
+    # file_dir = os.path.dirname(fp)
 
     with pd.ExcelWriter(
         os.path.join(
             "completed", f"{datetime.now():%Y%m%d%H%S}.OM_ADMIN_FEE_REPORT.xlsx"
         ),
     ) as writer:
-        df1 = pd.DataFrame([x.model_dump() for x in rows if x.fee_percentage > 3.2])
+        df1 = pd.DataFrame([x.model_dump() for x in rows if x.fee_percentage >= 3.5])
         df1["match"] = df1["match"].astype(str)
         df1.loc["total"] = df1.sum(numeric_only=True)
         df1.loc[df1.index[-1], "fee_percentage"] = 3.5
@@ -238,7 +269,13 @@ def etl(fp):
         df1.loc["total_after_adj", "admin_fee"] = adjustments["3.5"].total_fee_after_adj
         df1[return_cols].to_excel(writer, sheet_name="3.5%", index=False)
 
-        df2 = pd.DataFrame([x.model_dump() for x in rows if x.fee_percentage <= 3.2])
+        df2 = pd.DataFrame(
+            [
+                x.model_dump()
+                for x in rows
+                if x.fee_percentage > 0.5 and x.fee_percentage <= 3.2
+            ]
+        )
         df2["match"] = df2["match"].astype(str)
         df2.loc["total"] = df2.sum(numeric_only=True)
         df2.loc[df2.index[-1], "fee_percentage"] = 3.2
@@ -247,6 +284,16 @@ def etl(fp):
         df2.loc["total_after_adj", "fee_percentage"] = "Total After Adjustment"
         df2.loc["total_after_adj", "admin_fee"] = adjustments["3.2"].total_fee_after_adj
         df2[return_cols].to_excel(writer, sheet_name="3.2%", index=False)
+
+        df3 = pd.DataFrame([x.model_dump() for x in rows if x.fee_percentage <= 0.5])
+        df3["match"] = df3["match"].astype(str)
+        df3.loc["total"] = df3.sum(numeric_only=True)
+        df3.loc[df3.index[-1], "fee_percentage"] = 0.5
+        df3.loc["adjustment", "fee_percentage"] = "Adjustment"
+        df3.loc["adjustment", "admin_fee"] = adjustments["0.5"].adj
+        df3.loc["total_after_adj", "fee_percentage"] = "Total After Adjustment"
+        df3.loc["total_after_adj", "admin_fee"] = adjustments["0.5"].total_fee_after_adj
+        df3[return_cols].to_excel(writer, sheet_name="0.5%", index=False)
 
         df_err = pd.DataFrame([x.model_dump() for x in error_rows])
         if error_rows:
