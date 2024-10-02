@@ -219,7 +219,7 @@ def get_tracings_into_df(period: str, gpo: str, rerun_license: bool = False):
                 "R11956B": "9998825",
                 "R11956C": "9998825",
                 "R11956D": "9998825",
-                "R13970": "10008792",
+                "R13970A": "10008792",
             },
             "fee": 0.02,
             "fields": [

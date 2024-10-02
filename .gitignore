@@ -8,3 +8,5 @@ completed
 errors
 data_analytics
 /**/*.xlsx
+dist
+build
