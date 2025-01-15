@@ -1,5 +1,6 @@
-from pydantic import BaseModel
 from enum import Enum
+
+from pydantic import BaseModel
 
 # {
 #   "_id": {
@@ -41,6 +42,7 @@ from enum import Enum
 #   'PREMIER',   'SCMA',
 #   'TRG',       'UNITY'
 
+
 class GPO(str, Enum):
     MEDASSETS = "MEDASSETS"
     PREMIER = "PREMIER"
@@ -55,6 +57,7 @@ class GPO(str, Enum):
     TRG = "TRG"
     UNITY = "UNITY"
     HEALTHTRUST = "HEALTHTRUST"
+    INJX = "INJX"
 
 
 class Tracing(BaseModel):

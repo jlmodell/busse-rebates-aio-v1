@@ -16,6 +16,7 @@ VALID_GPOS = [
     "SCMA",
     "TRG",
     "UNITY",
+    "INJX",
 ]
 
 
