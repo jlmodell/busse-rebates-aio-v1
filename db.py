@@ -53,6 +53,7 @@ Sched_data = DB("busserebatetraces", "sched_data")
 GPO_contracts = DB("busserebatetraces", "contracts")
 
 Contracts = DB("bussepricing", "contract_prices")
+States = DB("busse_sales_reps", "states")
 
 
 @lru_cache(maxsize=None)
