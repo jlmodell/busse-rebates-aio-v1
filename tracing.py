@@ -2,6 +2,50 @@ from enum import Enum
 
 from pydantic import BaseModel
 
+
+class GPO(str, Enum):
+    MEDASSETS = "MEDASSETS"
+    PREMIER = "PREMIER"
+    VIZIENT = "MEDASSETS"
+    MAGNET = "MAGNET"
+    APTITUDE = "APTITUDE"
+    HPG = "HPG"
+    LIJ = "LIJ"
+    MEDIGROUP = "MEDIGROUP"
+    MHA = "MHA"
+    SCMA = "SCMA"
+    TRG = "TRG"
+    UNITY = "UNITY"
+    HEALTHTRUST = "HEALTHTRUST"
+    INJX = "INJX"
+
+
+class Tracing(BaseModel):
+    period: str
+    name: str
+    addr: str
+    city: str
+    state: str
+    gpo: GPO
+    license: str
+    searchScore: float
+    contract: str
+    claim_nbr: str
+    order_nbr: str
+    invoice_nbr: str
+    invoice_date: str
+    part: str
+    unit_rebate: float
+    ship_qty: int
+    uom: str
+    ship_qty_as_cs: int
+    rebate: float
+    cost: float
+    check_license: bool
+    postal: str
+    __date__: str
+
+
 # {
 #   "_id": {
 #     "$oid": "62587222c37e81dca59a1916"

@@ -6,23 +6,81 @@ from dateutil.relativedelta import relativedelta
 
 from db import Tracings as t
 
+GPO_CONTRACT_MAP = {
+    "R12304": "NORTHWELL",
+    "R9873": "MAGNET",
+    "R12546": "MEDIGROUP",
+    "R11956": "APTITUDE",
+    "R13970": "APTITUDE",
+    "R21020": "HEALTHTRUST",
+    "R21053": "INJX",
+    "R506T": "VIZIENT",
+    "R705T": "VIZIENT",
+    "R8643": "PREMIER",
+    "R6521": "PREMIER",
+    "R5060": "PREMIER",
+}
+
+OUTPUT_FILE_PATH = r"C:\temp\contract_spend_reports"
+
+US_STATE_ABBREV = [
+    "AL",  # Alabama
+    "AK",  # Alaska
+    "AZ",  # Arizona
+    "AR",  # Arkansas
+    "CA",  # California
+    "CO",  # Colorado
+    "CT",  # Connecticut
+    "DE",  # Delaware
+    "FL",  # Florida
+    "GA",  # Georgia
+    "HI",  # Hawaii
+    "ID",  # Idaho
+    "IL",  # Illinois
+    "IN",  # Indiana
+    "IA",  # Iowa
+    "KS",  # Kansas
+    "KY",  # Kentucky
+    "LA",  # Louisiana
+    "ME",  # Maine
+    "MD",  # Maryland
+    "MA",  # Massachusetts
+    "MI",  # Michigan
+    "MN",  # Minnesota
+    "MS",  # Mississippi
+    "MO",  # Missouri
+    "MT",  # Montana
+    "NE",  # Nebraska
+    "NV",  # Nevada
+    "NH",  # New Hampshire
+    "NJ",  # New Jersey
+    "NM",  # New Mexico
+    "NY",  # New York
+    "NC",  # North Carolina
+    "ND",  # North Dakota
+    "OH",  # Ohio
+    "OK",  # Oklahoma
+    "OR",  # Oregon
+    "PA",  # Pennsylvania
+    "RI",  # Rhode Island
+    "SC",  # South Carolina
+    "SD",  # South Dakota
+    "TN",  # Tennessee
+    "TX",  # Texas
+    "UT",  # Utah
+    "VT",  # Vermont
+    "VA",  # Virginia
+    "WA",  # Washington
+    "WV",  # West Virginia
+    "WI",  # Wisconsin
+    "WY",  # Wyoming
+    "DC",  # District of Columbia
+]
+
 
 def get_gpo_by_contract(contract: str) -> str:
-    gpo_contract_map = {
-        "R12304": "NORTHWELL",
-        "R9873": "MAGNET",
-        "R12546": "MEDIGROUP",
-        "R11956": "APTITUDE",
-        "R13970": "APTITUDE",
-        "R2102": "HEALTHTRUST",
-        "R2105": "INJX",
-        "R506T": "VIZIENT",
-        "R705T": "VIZIENT",
-        "R8643": "PREMIER",
-        "R6521": "PREMIER",
-        "R5060": "PREMIER",
-    }
-    return gpo_contract_map.get(contract, "UNKNOWN")
+    global GPO_CONTRACT_MAP
+    return GPO_CONTRACT_MAP.get(contract, "UNKNOWN")
 
 
 def find_many_by_date_minus_12_months(dt: datetime, contract: str) -> list:
@@ -163,6 +221,8 @@ def cleanup_df(contract: str, df: pd.DataFrame) -> pd.DataFrame:
         # "gpo",
     ]
 
+    df["part"] = df["part"].astype(str).str.strip().str.upper()
+
     for column in columns_to_convert:
         utility_fn_uppercase(df, column)  # Don't reassign df
 
@@ -185,9 +245,69 @@ def write_to_xlsx_split_by_state(dfs: dict, output_file_name: str) -> None:
                 df.to_excel(writer, sheet_name=state, index=False)
 
 
+def combine_xlsx_files_in_output_file_path_by_states() -> None:
+    global OUTPUT_FILE_PATH, US_STATE_ABBREV
+
+    import os
+    from glob import glob
+
+    output_path = OUTPUT_FILE_PATH
+    xlsx_files = glob(os.path.join(output_path, "*.xlsx"))
+    for xlsx_file in xlsx_files:
+        print(xlsx_file)
+
+    print(len(xlsx_files), "files found")
+
+    continue_processing = input("Continue processing? (y/n): ")
+    if continue_processing.lower() != "y":
+        return
+
+    # Dictionary to store DataFrames by state
+    dfs = {}
+
+    # Iterate through each Excel file
+    for xlsx_file in xlsx_files:
+        # Read all sheets from the Excel file
+        excel_file = pd.ExcelFile(xlsx_file)
+
+        # Iterate through each sheet (state) in the file
+        for sheet_name in excel_file.sheet_names:
+            df = pd.read_excel(xlsx_file, sheet_name=sheet_name)
+
+            # If state already exists in dfs, concatenate the new data
+            if sheet_name in dfs:
+                dfs[sheet_name] = pd.concat([dfs[sheet_name], df], ignore_index=True)
+            else:
+                dfs[sheet_name] = df
+
+    # Create a new Excel file with combined data by state
+    output_file = os.path.join(output_path, "combined_by_state.xlsx")
+
+    # sort dfs by state
+    dfs = dict(sorted(dfs.items()))
+
+    # Create ExcelWriter object
+    with pd.ExcelWriter(output_file, engine="openpyxl") as writer:
+        # Write each state's data to a separate sheet
+        for state, df in dfs.items():
+            if state in US_STATE_ABBREV:
+                # Remove duplicates if needed
+                # df = df.drop_duplicates()
+                # Sort if needed
+                df = df.sort_values(by=["contract", "part"])
+
+                # Write to Excel
+                df.to_excel(writer, sheet_name=state, index=False)
+
+    print(f"Combined file created at: {output_file}")
+    print(f"Total states processed: {len(dfs)}")
+
+
 def main():
     import os
     import sys
+
+    global GPO_CONTRACT_MAP, OUTPUT_FILE_PATH
 
     skip_user_input = False
 
@@ -198,22 +318,9 @@ def main():
             skip_user_input = True
 
     if skip_user_input:
-        contracts = [
-            "R12304",
-            "R9873",
-            "R12546",
-            "R11956",
-            "R13970",
-            "R2102",
-            "R2105",
-            "R506T",
-            "R705T",
-            "R8643",
-            "R6521",
-            "R5060",
-        ]
+        contracts = list(GPO_CONTRACT_MAP.keys())
 
-        output_path = r"C:\temp\contract_spend_reports"
+        output_path = OUTPUT_FILE_PATH
         if not os.path.exists(output_path):
             os.mkdir(output_path)
 
@@ -291,6 +398,8 @@ def main():
                 write_to_xlsx_split_by_state(dfs, output_file_name)
 
                 print(f"Saved to {output_file_name}")
+
+    combine_xlsx_files_in_output_file_path_by_states()
 
 
 if __name__ == "__main__":

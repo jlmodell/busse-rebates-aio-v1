@@ -79,7 +79,7 @@ current_file_maps = {
     "henryschein": {
         "float_cols": [10, 11, 12, 13, 14],
         "date_col": 16,
-        "requires_cost_calc": False,
+        "requires_cost_calc": True,
         "col_map": {
             "contract": 1,
             "part": 5,
@@ -159,7 +159,7 @@ current_file_maps = {
             "invoice_date": 21,
             "quantity": 22,
             "uom": 23,
-            "sale": 15,
+            "sale": 16,  # udpated from 15 -- this has been incorrect
             "unit_rebate": 17,
             "rebate": 26,
         },
@@ -388,19 +388,23 @@ def ingest(
     if distributor == "dealmed":
         # iterate over each row and if ['Extended Contract Price'] is 0 or NaN, set ['Extended Contract Price'] = ['Extended Purchase Price']
         df["Extended Contract Price"] = df.apply(
-            lambda row: row["Extended Purchase Price"]
-            if row["Extended Contract Price"] == "0"
-            or row["Extended Contract Price"] == ""
-            or pd.isna(row["Extended Contract Price"])
-            else row["Extended Contract Price"],
+            lambda row: (
+                row["Extended Purchase Price"]
+                if row["Extended Contract Price"] == "0"
+                or row["Extended Contract Price"] == ""
+                or pd.isna(row["Extended Contract Price"])
+                else row["Extended Contract Price"]
+            ),
             axis=1,
         )
         # iterate over each row and if ['Extended Rebate Requested'] is "" or NaN then set to float $0.00
         df["Extended Rebate Requested"] = df.apply(
-            lambda row: 0.00
-            if row["Extended Rebate Requested"] == ""
-            or pd.isna(row["Extended Rebate Requested"])
-            else row["Extended Rebate Requested"],
+            lambda row: (
+                0.00
+                if row["Extended Rebate Requested"] == ""
+                or pd.isna(row["Extended Rebate Requested"])
+                else row["Extended Rebate Requested"]
+            ),
             axis=1,
         )
 
